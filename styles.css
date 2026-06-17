@@ -273,7 +273,7 @@ textarea {
 
 .chart-viewport {
   position: relative;
-  height: min(70vh, 45rem);
+  height: 18rem;
   overflow: hidden;
   border-radius: 0.25rem;
   border: 0.0625rem solid rgba(166, 198, 255, 0.14);
@@ -389,6 +389,6 @@ kbd {
   }
 
   .chart-viewport {
-    height: min(62vh, 38.75rem);
+    height: 18rem;
   }
 }

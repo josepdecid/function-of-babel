@@ -6,6 +6,8 @@ const EDITOR_CELL_SIZE = 9;
 const CHART_CELL_SIZE = 12;
 const AXIS_WIDTH = 132;
 const CHART_BUFFER_ROWS = 100;
+const CHART_VISIBLE_ROWS = 24;
+const CHART_PADDING_ROWS = 4;
 const CANONICAL_K =
   "960939379918958884971672962127852754715004339660129306651505519271702802395266424689642842174350718121267153782770623355993237280874144307891325963941337723487857735749823926629715517173716995165232890538221612403238855866184013235585136048828693337902491454229288667081096184496091705183454067827731551705405381627380967602565625016981482083418783163849115590225610003652351370343874461848378737238198224849863465033159410054974700593138339226497249461751545728366702369745461014655997933798537483143786841806593422227898388722980000748404719";
 
@@ -117,13 +119,32 @@ function drawEditor() {
   }
 }
 
+function getChartTopYForK(kValue) {
+  return kValue - BigInt(CHART_PADDING_ROWS);
+}
+
+function isInKRange(y) {
+  const k = state.currentK;
+  return y >= k && y <= k + BigInt(GRID_HEIGHT - 1);
+}
+
+function getChartCellColor(enabled, y) {
+  if (!enabled) {
+    return "rgba(244, 247, 255, 0.08)";
+  }
+  if (isInKRange(y)) {
+    return "#f4f7ff";
+  }
+  return "rgba(244, 247, 255, 0.42)";
+}
+
 function resizeChart() {
   const viewportWidth = chartViewport.clientWidth;
   const targetWidth = Math.max(
     viewportWidth,
     AXIS_WIDTH + GRID_WIDTH * CHART_CELL_SIZE,
   );
-  const visibleRows = Math.ceil(chartViewport.clientHeight / CHART_CELL_SIZE);
+  const visibleRows = CHART_VISIBLE_ROWS;
   const renderRows = visibleRows + CHART_BUFFER_ROWS * 2;
 
   chartSpacer.style.minWidth = `${targetWidth}px`;
@@ -133,6 +154,7 @@ function resizeChart() {
     visibleRows,
     renderRows,
     renderTopY: null,
+    renderK: null,
   };
 
   scheduleChartRender();
@@ -173,7 +195,10 @@ function drawChart() {
   const renderRows = visibleRows + CHART_BUFFER_ROWS * 2;
   const topFunctionY = state.centerY - BigInt(CHART_BUFFER_ROWS);
 
-  if (state.chartMetrics.renderTopY === topFunctionY.toString()) {
+  if (
+    state.chartMetrics.renderTopY === topFunctionY.toString() &&
+    state.chartMetrics.renderK === state.currentK.toString()
+  ) {
     updateVisibleRange(visibleRows, topFunctionY);
     return;
   }
@@ -186,6 +211,7 @@ function drawChart() {
   fillChartBackground();
   chartCanvas.dataset.anchorY = topFunctionY.toString();
   state.chartMetrics.renderTopY = topFunctionY.toString();
+  state.chartMetrics.renderK = state.currentK.toString();
 
   chartContext.fillStyle = "rgba(255, 255, 255, 0.08)";
   chartContext.fillRect(AXIS_WIDTH - 1, 0, 1, chartCanvas.height);
@@ -213,9 +239,8 @@ function drawChart() {
     }
 
     for (let x = 0; x < GRID_WIDTH; x += 1) {
-      chartContext.fillStyle = getFunctionBit(x, y)
-        ? "#f4f7ff"
-        : "rgba(244, 247, 255, 0.08)";
+      const enabled = getFunctionBit(x, y);
+      chartContext.fillStyle = getChartCellColor(enabled, y);
       chartContext.fillRect(
         AXIS_WIDTH + x * CHART_CELL_SIZE,
         pixelTop,
@@ -336,7 +361,7 @@ function loadGridFromCurrentK({ recenter = false } = {}) {
   decodeGridFromK(state.currentK);
   drawEditor();
   if (recenter) {
-    state.centerY = state.currentK + 8n;
+    state.centerY = getChartTopYForK(state.currentK);
     centerChartOnCurrentY();
   }
   scheduleChartRender();
@@ -389,7 +414,7 @@ function centerChartOnYFromTextarea() {
     return;
   }
 
-  state.centerY = BigInt(kInput.value);
+  state.centerY = getChartTopYForK(BigInt(kInput.value));
   centerChartOnCurrentY();
   scheduleChartRender();
 }
