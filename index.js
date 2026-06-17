@@ -323,10 +323,16 @@ function getHoveredAxisY(clientX, clientY) {
 
 function syncKText() {
   kInput.value = state.currentK.toString();
+  resizeKInput();
 }
 
 function syncCenterYText() {
   centerYInput.value = state.centerY.toString();
+}
+
+function resizeKInput() {
+  kInput.style.height = "auto";
+  kInput.style.height = `${kInput.scrollHeight}px`;
 }
 
 function loadGridFromCurrentK({ recenter = false } = {}) {
@@ -567,6 +573,7 @@ function bindControls() {
   });
 
   centerYInput.addEventListener("change", updateCenterYFromInput);
+  kInput.addEventListener("input", resizeKInput);
   kInput.addEventListener("change", () => loadKFromInput({ recenter: false }));
   bindChartDrag();
   window.addEventListener("resize", resizeChart);
