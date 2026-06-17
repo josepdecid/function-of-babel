@@ -1,6 +1,11 @@
 import { defineConfig } from "@rsbuild/core";
 
+const isGitHubPages = process.env.GITHUB_PAGES === "true";
+
 export default defineConfig({
+  output: {
+    assetPrefix: isGitHubPages ? "/function-of-babel/" : "/",
+  },
   source: {
     entry: {
       index: "./index.js",
