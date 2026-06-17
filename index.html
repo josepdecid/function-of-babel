@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
+    <meta charset="UFor TF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Function of Babel</title>
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
@@ -126,24 +126,30 @@
           <h2>Chart</h2>
           <p>Drag up and down. Somewhere in here, it is waiting.</p>
         </div>
-        <div class="chart-meta">
-          <span id="visible-range">Visible y: -</span>
-        </div>
       </div>
 
       <button type="button" id="center-on-k">Go to this one</button>
 
-      <div class="chart-viewport" id="chart-viewport">
-        <div class="chart-spacer" id="chart-spacer">
+      <div class="chart-frame">
+        <p class="chart-y-value" id="visible-y-start">
+          <span class="chart-y-value-prefix">From</span>
+          <math><mi>y</mi><mo>=</mo></math>
+          <span class="chart-y-value-number" id="visible-y-start-value">-</span>
+        </p>
+        <div class="chart-viewport" id="chart-viewport">
           <canvas
             id="chart-canvas"
-            width="700"
+            width="1272"
             height="1200"
             aria-label="Scrollable Tupper chart"
           ></canvas>
         </div>
+        <p class="chart-y-value" id="visible-y-end">
+          <span class="chart-y-value-prefix">To</span>
+          <math><mi>y</mi><mo>=</mo></math>
+          <span class="chart-y-value-number" id="visible-y-end-value">-</span>
+        </p>
       </div>
-      <div class="chart-tooltip" id="chart-tooltip" role="tooltip" hidden></div>
     </section>
   </body>
 </html>

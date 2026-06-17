@@ -4,10 +4,10 @@ const GRID_WIDTH = 106;
 const GRID_HEIGHT = 17;
 const EDITOR_CELL_SIZE = 9;
 const CHART_CELL_SIZE = 12;
-const AXIS_WIDTH = 132;
 const CHART_BUFFER_ROWS = 100;
-const CHART_VISIBLE_ROWS = 24;
-const CHART_PADDING_ROWS = 4;
+const CHART_VISIBLE_ROWS = 32;
+const CHART_PADDING_ROWS = 8;
+const CHART_NATURAL_WIDTH = GRID_WIDTH * CHART_CELL_SIZE;
 const CANONICAL_K =
   "960939379918958884971672962127852754715004339660129306651505519271702802395266424689642842174350718121267153782770623355993237280874144307891325963941337723487857735749823926629715517173716995165232890538221612403238855866184013235585136048828693337902491454229288667081096184496091705183454067827731551705405381627380967602565625016981482083418783163849115590225610003652351370343874461848378737238198224849863465033159410054974700593138339226497249461751545728366702369745461014655997933798537483143786841806593422227898388722980000748404719";
 
@@ -29,10 +29,9 @@ const editorContext = editorCanvas.getContext("2d");
 const chartCanvas = document.getElementById("chart-canvas");
 const chartContext = chartCanvas.getContext("2d");
 const chartViewport = document.getElementById("chart-viewport");
-const chartSpacer = document.getElementById("chart-spacer");
-const chartTooltip = document.getElementById("chart-tooltip");
 const kInput = document.getElementById("k-input");
-const visibleRange = document.getElementById("visible-range");
+const visibleYStartValue = document.getElementById("visible-y-start-value");
+const visibleYEndValue = document.getElementById("visible-y-end-value");
 
 function normalizeModulo(value, modulus) {
   const remainder = value % modulus;
@@ -138,19 +137,22 @@ function getChartCellColor(enabled, y) {
   return "rgba(244, 247, 255, 0.42)";
 }
 
+function getChartDisplayMetrics() {
+  const canvasRect = chartCanvas.getBoundingClientRect();
+  const renderRows = state.chartMetrics?.renderRows ?? 1;
+
+  return {
+    rect: canvasRect,
+    rowHeight: canvasRect.height / renderRows,
+  };
+}
+
 function resizeChart() {
-  const viewportWidth = chartViewport.clientWidth;
-  const targetWidth = Math.max(
-    viewportWidth,
-    AXIS_WIDTH + GRID_WIDTH * CHART_CELL_SIZE,
-  );
   const visibleRows = CHART_VISIBLE_ROWS;
   const renderRows = visibleRows + CHART_BUFFER_ROWS * 2;
 
-  chartSpacer.style.minWidth = `${targetWidth}px`;
-
   state.chartMetrics = {
-    width: targetWidth,
+    width: CHART_NATURAL_WIDTH,
     visibleRows,
     renderRows,
     renderTopY: null,
@@ -167,15 +169,6 @@ function fillChartBackground() {
 
 function formatBigInt(value) {
   return value.toString();
-}
-
-function formatAxisValue(value) {
-  const sign = value < 0n ? "-" : "";
-  const digits = (value < 0n ? -value : value).toString();
-  if (digits.length <= 3) {
-    return `${sign}${digits}`;
-  }
-  return `${sign}...${digits.slice(-3)}`;
 }
 
 function formatRangeValue(value) {
@@ -205,44 +198,21 @@ function drawChart() {
 
   chartCanvas.width = state.chartMetrics.width;
   chartCanvas.height = renderRows * CHART_CELL_SIZE;
-  chartCanvas.style.width = `${state.chartMetrics.width}px`;
-  chartCanvas.style.height = `${renderRows * CHART_CELL_SIZE}px`;
-  chartCanvas.style.top = `${-CHART_BUFFER_ROWS * CHART_CELL_SIZE}px`;
+  chartCanvas.style.top = `${(-CHART_BUFFER_ROWS / renderRows) * 100}%`;
   fillChartBackground();
   chartCanvas.dataset.anchorY = topFunctionY.toString();
   state.chartMetrics.renderTopY = topFunctionY.toString();
   state.chartMetrics.renderK = state.currentK.toString();
 
-  chartContext.fillStyle = "rgba(255, 255, 255, 0.08)";
-  chartContext.fillRect(AXIS_WIDTH - 1, 0, 1, chartCanvas.height);
-
   for (let renderedRow = 0; renderedRow < renderRows; renderedRow += 1) {
     const y = topFunctionY + BigInt(renderedRow);
     const pixelTop = renderedRow * CHART_CELL_SIZE;
-    const rowModulo = normalizeModulo(y, 4n);
-
-    if (rowModulo === 0n) {
-      chartContext.strokeStyle = "rgba(166, 198, 255, 0.12)";
-      chartContext.beginPath();
-      chartContext.moveTo(0, pixelTop + 0.5);
-      chartContext.lineTo(chartCanvas.width, pixelTop + 0.5);
-      chartContext.stroke();
-
-      chartContext.fillStyle = "#a3b2d5";
-      chartContext.font = "12px ui-monospace, SFMono-Regular, Menlo, monospace";
-      chartContext.textBaseline = "middle";
-      chartContext.fillText(
-        formatAxisValue(y),
-        8,
-        pixelTop + CHART_CELL_SIZE / 2,
-      );
-    }
 
     for (let x = 0; x < GRID_WIDTH; x += 1) {
       const enabled = getFunctionBit(x, y);
       chartContext.fillStyle = getChartCellColor(enabled, y);
       chartContext.fillRect(
-        AXIS_WIDTH + x * CHART_CELL_SIZE,
+        x * CHART_CELL_SIZE,
         pixelTop,
         CHART_CELL_SIZE - 1,
         CHART_CELL_SIZE - 1,
@@ -256,8 +226,11 @@ function drawChart() {
 function updateVisibleRange(visibleRows, topFunctionY) {
   const startY = topFunctionY + BigInt(CHART_BUFFER_ROWS);
   const endY = startY + BigInt(Math.max(visibleRows - 1, 0));
-  visibleRange.textContent = `Visible y: ${formatRangeValue(startY)} to ${formatRangeValue(endY)}`;
-  visibleRange.title = `${formatBigInt(startY)} to ${formatBigInt(endY)}`;
+
+  visibleYStartValue.textContent = formatRangeValue(startY);
+  visibleYEndValue.textContent = formatRangeValue(endY);
+  visibleYStartValue.title = formatBigInt(startY);
+  visibleYEndValue.title = formatBigInt(endY);
 }
 
 function scheduleChartRender() {
@@ -269,61 +242,6 @@ function scheduleChartRender() {
     state.chartPending = false;
     drawChart();
   });
-}
-
-function hideChartTooltip() {
-  chartTooltip.hidden = true;
-}
-
-function showChartTooltip(text, clientX, clientY) {
-  const panelRect = chartTooltip.offsetParent.getBoundingClientRect();
-  chartTooltip.hidden = false;
-  chartTooltip.textContent = text;
-
-  const offset = 14;
-  const maxLeft = panelRect.width - chartTooltip.offsetWidth;
-  const left = Math.max(
-    0,
-    Math.min(clientX - panelRect.left + offset, maxLeft),
-  );
-  const preferredTop = clientY - panelRect.top + offset;
-  const top = Math.max(
-    0,
-    Math.min(preferredTop, panelRect.height - chartTooltip.offsetHeight),
-  );
-
-  chartTooltip.style.left = `${left}px`;
-  chartTooltip.style.top = `${top}px`;
-}
-
-function getHoveredAxisY(clientX, clientY) {
-  if (!state.chartMetrics) {
-    return null;
-  }
-
-  const canvasRect = chartCanvas.getBoundingClientRect();
-  if (
-    clientX < canvasRect.left ||
-    clientX > canvasRect.right ||
-    clientY < canvasRect.top ||
-    clientY > canvasRect.bottom
-  ) {
-    return null;
-  }
-
-  const x = clientX - canvasRect.left;
-  if (x > AXIS_WIDTH) {
-    return null;
-  }
-
-  const renderedRow = Math.floor((clientY - canvasRect.top) / CHART_CELL_SIZE);
-  if (renderedRow < 0 || renderedRow >= state.chartMetrics.renderRows) {
-    return null;
-  }
-
-  const topFunctionY = state.centerY - BigInt(CHART_BUFFER_ROWS);
-  const y = topFunctionY + BigInt(renderedRow);
-  return normalizeModulo(y, 4n) === 0n ? y : null;
 }
 
 function syncKText() {
@@ -420,7 +338,6 @@ function centerChartOnYFromTextarea() {
 }
 
 function centerChartOnCurrentY() {
-  hideChartTooltip();
   scheduleChartRender();
 }
 
@@ -429,7 +346,6 @@ function shiftChartCenterByRows(rowDelta) {
     return;
   }
   state.centerY += BigInt(rowDelta);
-  hideChartTooltip();
   scheduleChartRender();
 }
 
@@ -447,11 +363,12 @@ function shiftChartCenterByPixels(pixelDelta) {
   }
 
   const totalDelta = state.chartDrag.remainder + pixelDelta;
-  const rowDelta = Math.trunc(totalDelta / CHART_CELL_SIZE);
+  const rowHeight = getChartDisplayMetrics().rowHeight;
+  const rowDelta = Math.trunc(totalDelta / rowHeight);
 
   if (rowDelta !== 0) {
     shiftChartCenterByRows(rowDelta);
-    state.chartDrag.remainder = totalDelta - rowDelta * CHART_CELL_SIZE;
+    state.chartDrag.remainder = totalDelta - rowDelta * rowHeight;
     return;
   }
 
@@ -467,31 +384,25 @@ function bindChartDrag() {
     };
     chartViewport.classList.add("is-dragging");
     chartViewport.setPointerCapture(event.pointerId);
-    hideChartTooltip();
   });
 
   chartViewport.addEventListener("pointermove", (event) => {
-    if (state.chartDrag && state.chartDrag.pointerId === event.pointerId) {
-      const totalDelta =
-        state.chartDrag.remainder + (event.clientY - state.chartDrag.clientY);
-      const rowDelta = Math.trunc(totalDelta / CHART_CELL_SIZE);
-
-      if (rowDelta !== 0) {
-        shiftChartCenterByRows(rowDelta);
-        state.chartDrag.clientY += rowDelta * CHART_CELL_SIZE;
-        state.chartDrag.remainder = totalDelta - rowDelta * CHART_CELL_SIZE;
-      } else {
-        state.chartDrag.remainder = totalDelta;
-      }
+    if (!state.chartDrag || state.chartDrag.pointerId !== event.pointerId) {
       return;
     }
 
-    const hoveredY = getHoveredAxisY(event.clientX, event.clientY);
-    if (hoveredY === null) {
-      hideChartTooltip();
-      return;
+    const { rowHeight } = getChartDisplayMetrics();
+    const totalDelta =
+      state.chartDrag.remainder + (event.clientY - state.chartDrag.clientY);
+    const rowDelta = Math.trunc(totalDelta / rowHeight);
+
+    if (rowDelta !== 0) {
+      shiftChartCenterByRows(rowDelta);
+      state.chartDrag.clientY += rowDelta * rowHeight;
+      state.chartDrag.remainder = totalDelta - rowDelta * rowHeight;
+    } else {
+      state.chartDrag.remainder = totalDelta;
     }
-    showChartTooltip(formatBigInt(hoveredY), event.clientX, event.clientY);
   });
 
   const endChartDrag = (event) => {
@@ -504,12 +415,6 @@ function bindChartDrag() {
 
   chartViewport.addEventListener("pointerup", endChartDrag);
   chartViewport.addEventListener("pointercancel", endChartDrag);
-  chartViewport.addEventListener("pointerleave", (event) => {
-    if (state.chartDrag && state.chartDrag.pointerId === event.pointerId) {
-      return;
-    }
-    hideChartTooltip();
-  });
 
   chartViewport.addEventListener(
     "wheel",
