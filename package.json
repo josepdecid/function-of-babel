@@ -1,6 +1,7 @@
 {
   "name": "function-of-babel",
   "private": true,
+  "license": "MIT",
   "packageManager": "bun@1.3.9",
   "scripts": {
     "dev": "rsbuild dev",
