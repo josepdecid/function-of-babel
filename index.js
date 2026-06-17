@@ -6,7 +6,7 @@ const EDITOR_CELL_SIZE = 9;
 const CHART_CELL_SIZE = 12;
 const CHART_BUFFER_ROWS = 100;
 const CHART_VISIBLE_ROWS = 32;
-const CHART_PADDING_ROWS = 8;
+const CHART_FOCAL_ROW_OFFSET = (GRID_HEIGHT - 1) / 2;
 const CHART_NATURAL_WIDTH = GRID_WIDTH * CHART_CELL_SIZE;
 const CANONICAL_K =
   "960939379918958884971672962127852754715004339660129306651505519271702802395266424689642842174350718121267153782770623355993237280874144307891325963941337723487857735749823926629715517173716995165232890538221612403238855866184013235585136048828693337902491454229288667081096184496091705183454067827731551705405381627380967602565625016981482083418783163849115590225610003652351370343874461848378737238198224849863465033159410054974700593138339226497249461751545728366702369745461014655997933798537483143786841806593422227898388722980000748404719";
@@ -120,8 +120,19 @@ function drawEditor() {
   }
 }
 
-function getChartTopYForK(kValue) {
-  return kValue - BigInt(CHART_PADDING_ROWS);
+function getChartCenterYForK(kValue) {
+  const focalY = kValue + BigInt(CHART_FOCAL_ROW_OFFSET);
+  const centerRowIndex = Math.floor((CHART_VISIBLE_ROWS - 1) / 2);
+  return focalY - BigInt(centerRowIndex);
+}
+
+function syncChartCanvasOffset() {
+  if (!state.chartMetrics || chartCanvas.width === 0) {
+    return;
+  }
+
+  const scale = chartCanvas.getBoundingClientRect().width / chartCanvas.width;
+  chartCanvas.style.top = `${-CHART_BUFFER_ROWS * CHART_CELL_SIZE * scale}px`;
 }
 
 function isInKRange(y) {
@@ -141,11 +152,11 @@ function getChartCellColor(enabled, y) {
 
 function getChartDisplayMetrics() {
   const canvasRect = chartCanvas.getBoundingClientRect();
-  const renderRows = state.chartMetrics?.renderRows ?? 1;
+  const visibleRowHeight = chartViewport.clientHeight / CHART_VISIBLE_ROWS;
 
   return {
     rect: canvasRect,
-    rowHeight: canvasRect.height / renderRows,
+    rowHeight: visibleRowHeight,
   };
 }
 
@@ -162,6 +173,7 @@ function resizeChart() {
   };
 
   scheduleChartRender();
+  syncChartCanvasOffset();
   updateVisibleYLabels();
 }
 
@@ -252,8 +264,8 @@ function drawChart() {
 
   chartCanvas.width = state.chartMetrics.width;
   chartCanvas.height = renderRows * CHART_CELL_SIZE;
-  chartCanvas.style.top = `${(-CHART_BUFFER_ROWS / renderRows) * 100}%`;
   fillChartBackground();
+  syncChartCanvasOffset();
   chartCanvas.dataset.anchorY = topFunctionY.toString();
   state.chartMetrics.renderTopY = topFunctionY.toString();
   state.chartMetrics.renderK = state.currentK.toString();
@@ -292,6 +304,7 @@ function scheduleChartRender() {
   requestAnimationFrame(() => {
     state.chartPending = false;
     drawChart();
+    syncChartCanvasOffset();
   });
 }
 
@@ -330,7 +343,7 @@ function loadGridFromCurrentK({ recenter = false } = {}) {
   decodeGridFromK(state.currentK);
   drawEditor();
   if (recenter) {
-    state.centerY = getChartTopYForK(state.currentK);
+    state.centerY = getChartCenterYForK(state.currentK);
     centerChartOnCurrentY();
   }
   scheduleChartRender();
@@ -383,7 +396,10 @@ function centerChartOnYFromTextarea() {
     return;
   }
 
-  state.centerY = getChartTopYForK(BigInt(kInput.value));
+  state.centerY = getChartCenterYForK(BigInt(kInput.value));
+  if (state.chartMetrics) {
+    state.chartMetrics.renderTopY = null;
+  }
   centerChartOnCurrentY();
   scheduleChartRender();
 }
