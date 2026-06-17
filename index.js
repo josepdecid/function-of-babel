@@ -71,11 +71,9 @@ function getFormulaBit(x, y) {
 }
 
 function decodeGridFromK(kValue) {
-  const quotient = kValue / 17n;
   for (let row = 0; row < GRID_HEIGHT; row += 1) {
     for (let column = 0; column < GRID_WIDTH; column += 1) {
-      const shift = BigInt(GRID_HEIGHT * column + row);
-      state.grid[row][column] = ((quotient >> shift) & 1n) === 1n;
+      state.grid[row][column] = getFormulaBit(column, kValue + BigInt(row));
     }
   }
 }
@@ -335,6 +333,27 @@ function resizeKInput() {
   kInput.style.height = `${kInput.scrollHeight}px`;
 }
 
+function sanitizeKInput() {
+  const { selectionStart, selectionEnd, value } = kInput;
+  const sanitized = value.replace(/\D/g, "");
+  if (sanitized === value) {
+    return;
+  }
+
+  const removedBeforeStart = value
+    .slice(0, selectionStart)
+    .replace(/\d/g, "").length;
+  const removedBeforeEnd = value
+    .slice(0, selectionEnd)
+    .replace(/\d/g, "").length;
+
+  kInput.value = sanitized;
+  kInput.setSelectionRange(
+    selectionStart - removedBeforeStart,
+    selectionEnd - removedBeforeEnd,
+  );
+}
+
 function loadGridFromCurrentK({ recenter = false } = {}) {
   decodeGridFromK(state.currentK);
   drawEditor();
@@ -356,6 +375,30 @@ function updateCurrentK(
   setStatus(message);
 }
 
+function syncCurrentKFromGrid(message) {
+  state.currentK = encodeGridToK();
+  syncKText();
+  scheduleChartRender();
+  if (message) {
+    setStatus(message);
+  }
+}
+
+function loadKFromText({
+  recenter = false,
+  message = "k loaded successfully.",
+}) {
+  if (!kInput.value) {
+    setStatus("k is empty.", true);
+    return;
+  }
+
+  const parsed = BigInt(kInput.value);
+  state.currentK = parsed;
+  loadGridFromCurrentK({ recenter });
+  setStatus(message);
+}
+
 function applyCellFromPoint(clientX, clientY) {
   const rect = editorCanvas.getBoundingClientRect();
   const scaleX = editorCanvas.width / rect.width;
@@ -373,31 +416,7 @@ function applyCellFromPoint(clientX, clientY) {
 
   state.grid[y][x] = state.paintValue;
   drawEditor();
-}
-
-function commitEncodedGrid() {
-  const encoded = encodeGridToK();
-  state.currentK = encoded;
-  syncKText();
-  state.centerY = encoded + 8n;
-  syncCenterYText();
-  scheduleChartRender();
-  setStatus("Grid encoded into k and chart centered on the slice.");
-}
-
-function loadKFromInput({ recenter = false } = {}) {
-  try {
-    const parsed = parseBigIntStrict(kInput.value, "k");
-    if (parsed < 0n) {
-      throw new Error("k must be zero or positive.");
-    }
-    if (parsed % 17n !== 0n) {
-      throw new Error("k must be divisible by 17 for a valid 17-row slice.");
-    }
-    updateCurrentK(parsed, { recenter, message: "k loaded successfully." });
-  } catch (error) {
-    setStatus(error.message, true);
-  }
+  syncCurrentKFromGrid();
 }
 
 function updateCenterYFromInput() {
@@ -521,7 +540,7 @@ function invertGrid() {
     }
   }
   drawEditor();
-  setStatus("Grid inverted. Encode to update k.");
+  syncCurrentKFromGrid("Grid inverted.");
 }
 
 function clearGrid() {
@@ -529,7 +548,24 @@ function clearGrid() {
     state.grid[row].fill(false);
   }
   drawEditor();
-  setStatus("Grid cleared. Encode to update k.");
+  syncCurrentKFromGrid("Grid cleared.");
+}
+
+function fillGrid() {
+  for (let row = 0; row < GRID_HEIGHT; row += 1) {
+    state.grid[row].fill(true);
+  }
+  drawEditor();
+  syncCurrentKFromGrid("Grid filled.");
+}
+
+function handleKInput() {
+  sanitizeKInput();
+  resizeKInput();
+  loadKFromText({
+    recenter: true,
+    message: "k loaded and chart centered on the slice.",
+  });
 }
 
 function bindEditorInput() {
@@ -557,13 +593,8 @@ function bindEditorInput() {
 
 function bindControls() {
   document.getElementById("clear-grid").addEventListener("click", clearGrid);
+  document.getElementById("fill-grid").addEventListener("click", fillGrid);
   document.getElementById("invert-grid").addEventListener("click", invertGrid);
-  document
-    .getElementById("load-k")
-    .addEventListener("click", () => loadKFromInput({ recenter: false }));
-  document
-    .getElementById("encode-grid")
-    .addEventListener("click", commitEncodedGrid);
   document.getElementById("center-on-k").addEventListener("click", () => {
     state.centerY = state.currentK + 8n;
     syncCenterYText();
@@ -573,8 +604,7 @@ function bindControls() {
   });
 
   centerYInput.addEventListener("change", updateCenterYFromInput);
-  kInput.addEventListener("input", resizeKInput);
-  kInput.addEventListener("change", () => loadKFromInput({ recenter: false }));
+  kInput.addEventListener("input", handleKInput);
   bindChartDrag();
   window.addEventListener("resize", resizeChart);
 }
