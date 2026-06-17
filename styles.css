@@ -124,14 +124,12 @@ h2 {
   line-height: 1.5;
 }
 
-.formula-block {
+.function-block {
   margin-top: 1.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid rgba(166, 198, 255, 0.14);
   overflow: hidden;
 }
 
-.formula-block math {
+.function-block math {
   min-width: max-content;
   color: var(--muted);
   font-size: clamp(0.95rem, 1.7vw, 1.1rem);

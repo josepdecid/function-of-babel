@@ -55,7 +55,7 @@ function normalizeModulo(value, modulus) {
   return remainder >= 0n ? remainder : remainder + modulus;
 }
 
-function getFormulaBit(x, y) {
+function getFunctionBit(x, y) {
   if (x < 0 || x >= GRID_WIDTH) {
     return false;
   }
@@ -73,7 +73,7 @@ function getFormulaBit(x, y) {
 function decodeGridFromK(kValue) {
   for (let row = 0; row < GRID_HEIGHT; row += 1) {
     for (let column = 0; column < GRID_WIDTH; column += 1) {
-      state.grid[row][column] = getFormulaBit(column, kValue + BigInt(row));
+      state.grid[row][column] = getFunctionBit(column, kValue + BigInt(row));
     }
   }
 }
@@ -189,10 +189,10 @@ function drawChart() {
 
   const visibleRows = state.chartMetrics.visibleRows;
   const renderRows = visibleRows + CHART_BUFFER_ROWS * 2;
-  const topFormulaY = state.centerY - BigInt(CHART_BUFFER_ROWS);
+  const topFunctionY = state.centerY - BigInt(CHART_BUFFER_ROWS);
 
-  if (state.chartMetrics.renderTopY === topFormulaY.toString()) {
-    updateVisibleRange(visibleRows, topFormulaY);
+  if (state.chartMetrics.renderTopY === topFunctionY.toString()) {
+    updateVisibleRange(visibleRows, topFunctionY);
     return;
   }
 
@@ -202,14 +202,14 @@ function drawChart() {
   chartCanvas.style.height = `${renderRows * CHART_CELL_SIZE}px`;
   chartCanvas.style.top = `${-CHART_BUFFER_ROWS * CHART_CELL_SIZE}px`;
   fillChartBackground();
-  chartCanvas.dataset.anchorY = topFormulaY.toString();
-  state.chartMetrics.renderTopY = topFormulaY.toString();
+  chartCanvas.dataset.anchorY = topFunctionY.toString();
+  state.chartMetrics.renderTopY = topFunctionY.toString();
 
   chartContext.fillStyle = "rgba(255, 255, 255, 0.08)";
   chartContext.fillRect(AXIS_WIDTH - 1, 0, 1, chartCanvas.height);
 
   for (let renderedRow = 0; renderedRow < renderRows; renderedRow += 1) {
-    const y = topFormulaY + BigInt(renderedRow);
+    const y = topFunctionY + BigInt(renderedRow);
     const pixelTop = renderedRow * CHART_CELL_SIZE;
     const rowModulo = normalizeModulo(y, 4n);
 
@@ -231,7 +231,7 @@ function drawChart() {
     }
 
     for (let x = 0; x < GRID_WIDTH; x += 1) {
-      chartContext.fillStyle = getFormulaBit(x, y)
+      chartContext.fillStyle = getFunctionBit(x, y)
         ? "#f4f7ff"
         : "rgba(244, 247, 255, 0.08)";
       chartContext.fillRect(
@@ -243,11 +243,11 @@ function drawChart() {
     }
   }
 
-  updateVisibleRange(visibleRows, topFormulaY);
+  updateVisibleRange(visibleRows, topFunctionY);
 }
 
-function updateVisibleRange(visibleRows, topFormulaY) {
-  const startY = topFormulaY + BigInt(CHART_BUFFER_ROWS);
+function updateVisibleRange(visibleRows, topFunctionY) {
+  const startY = topFunctionY + BigInt(CHART_BUFFER_ROWS);
   const endY = startY + BigInt(Math.max(visibleRows - 1, 0));
   visibleRange.textContent = `Visible y: ${formatRangeValue(startY)} to ${formatRangeValue(endY)}`;
   visibleRange.title = `${formatBigInt(startY)} to ${formatBigInt(endY)}`;
@@ -314,8 +314,8 @@ function getHoveredAxisY(clientX, clientY) {
     return null;
   }
 
-  const topFormulaY = state.centerY - BigInt(CHART_BUFFER_ROWS);
-  const y = topFormulaY + BigInt(renderedRow);
+  const topFunctionY = state.centerY - BigInt(CHART_BUFFER_ROWS);
+  const y = topFunctionY + BigInt(renderedRow);
   return normalizeModulo(y, 4n) === 0n ? y : null;
 }
 
@@ -614,7 +614,7 @@ function initialize() {
   bindControls();
   updateCurrentK(buildReadableDefaultK(), {
     recenter: true,
-    message: "Loaded Tupper's canonical self-referential constant.",
+    message: "Loaded the canonical self-referential function constant.",
   });
   resizeChart();
   scheduleChartRender();
