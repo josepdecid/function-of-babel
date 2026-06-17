@@ -265,11 +265,11 @@ textarea {
 }
 
 .chart-y-value {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
   align-items: baseline;
-  gap: 0.35rem;
+  column-gap: 0.35rem;
   width: 100%;
-  min-width: 0;
   margin: 0;
   color: var(--muted);
   font:
@@ -282,21 +282,16 @@ textarea {
   text-align: left;
 }
 
-.chart-y-value-prefix,
-.chart-y-value math {
-  flex-shrink: 0;
-}
-
 .chart-y-value math {
   color: var(--muted);
   font-size: 0.95em;
 }
 
 .chart-y-value-number {
+  display: block;
+  width: 100%;
   min-width: 0;
-  flex: 1;
   overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
 

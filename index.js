@@ -22,6 +22,8 @@ const state = {
   chartDrag: null,
   painting: false,
   paintValue: true,
+  visibleStartY: null,
+  visibleEndY: null,
 };
 
 const editorCanvas = document.getElementById("editor-canvas");
@@ -160,6 +162,7 @@ function resizeChart() {
   };
 
   scheduleChartRender();
+  updateVisibleYLabels();
 }
 
 function fillChartBackground() {
@@ -171,12 +174,63 @@ function formatBigInt(value) {
   return value.toString();
 }
 
-function formatRangeValue(value) {
-  const text = value.toString();
-  if (text.length <= 36) {
+const MIDDLE_ELLIPSIS = "...";
+let textMeasureContext = null;
+
+function getTextMeasureContext() {
+  if (!textMeasureContext) {
+    const canvas = document.createElement("canvas");
+    textMeasureContext = canvas.getContext("2d");
+  }
+  return textMeasureContext;
+}
+
+function measureTextWidth(text, font) {
+  const context = getTextMeasureContext();
+  context.font = font;
+  return context.measureText(text).width;
+}
+
+function formatMiddleEllipsis(text, maxWidth, font) {
+  if (maxWidth <= 0 || measureTextWidth(text, font) <= maxWidth) {
     return text;
   }
-  return `${text.slice(0, 16)}...${text.slice(-12)}`;
+
+  let startLen = Math.ceil(text.length / 2);
+  let endLen = Math.floor(text.length / 2);
+
+  while (startLen > 0 || endLen > 0) {
+    const candidate = `${text.slice(0, startLen)}${MIDDLE_ELLIPSIS}${text.slice(text.length - endLen)}`;
+    if (measureTextWidth(candidate, font) <= maxWidth) {
+      return candidate;
+    }
+
+    if (startLen >= endLen && startLen > 0) {
+      startLen -= 1;
+    } else if (endLen > 0) {
+      endLen -= 1;
+    } else {
+      startLen -= 1;
+    }
+  }
+
+  return MIDDLE_ELLIPSIS;
+}
+
+function setVisibleYLabel(element, fullText) {
+  const font = getComputedStyle(element).font;
+  const maxWidth = element.clientWidth;
+  element.textContent = formatMiddleEllipsis(fullText, maxWidth, font);
+  element.title = fullText;
+}
+
+function updateVisibleYLabels() {
+  if (state.visibleStartY === null || state.visibleEndY === null) {
+    return;
+  }
+
+  setVisibleYLabel(visibleYStartValue, formatBigInt(state.visibleStartY));
+  setVisibleYLabel(visibleYEndValue, formatBigInt(state.visibleEndY));
 }
 
 function drawChart() {
@@ -224,13 +278,10 @@ function drawChart() {
 }
 
 function updateVisibleRange(visibleRows, topFunctionY) {
-  const startY = topFunctionY + BigInt(CHART_BUFFER_ROWS);
-  const endY = startY + BigInt(Math.max(visibleRows - 1, 0));
-
-  visibleYStartValue.textContent = formatRangeValue(startY);
-  visibleYEndValue.textContent = formatRangeValue(endY);
-  visibleYStartValue.title = formatBigInt(startY);
-  visibleYEndValue.title = formatBigInt(endY);
+  state.visibleStartY = topFunctionY + BigInt(CHART_BUFFER_ROWS);
+  state.visibleEndY =
+    state.visibleStartY + BigInt(Math.max(visibleRows - 1, 0));
+  updateVisibleYLabels();
 }
 
 function scheduleChartRender() {
