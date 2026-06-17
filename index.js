@@ -10,7 +10,9 @@ const CANONICAL_K =
   "960939379918958884971672962127852754715004339660129306651505519271702802395266424689642842174350718121267153782770623355993237280874144307891325963941337723487857735749823926629715517173716995165232890538221612403238855866184013235585136048828693337902491454229288667081096184496091705183454067827731551705405381627380967602565625016981482083418783163849115590225610003652351370343874461848378737238198224849863465033159410054974700593138339226497249461751545728366702369745461014655997933798537483143786841806593422227898388722980000748404719";
 
 const state = {
-  grid: Array.from({length: GRID_HEIGHT}, () => Array(GRID_WIDTH).fill(false)),
+  grid: Array.from({ length: GRID_HEIGHT }, () =>
+    Array(GRID_WIDTH).fill(false),
+  ),
   currentK: 0n,
   centerY: 0n,
   chartPending: false,
@@ -327,7 +329,7 @@ function syncCenterYText() {
   centerYInput.value = state.centerY.toString();
 }
 
-function loadGridFromCurrentK({recenter = false} = {}) {
+function loadGridFromCurrentK({ recenter = false } = {}) {
   decodeGridFromK(state.currentK);
   drawEditor();
   if (recenter) {
@@ -340,11 +342,11 @@ function loadGridFromCurrentK({recenter = false} = {}) {
 
 function updateCurrentK(
   newK,
-  {recenter = false, message = "Grid decoded from k."} = {},
+  { recenter = false, message = "Grid decoded from k." } = {},
 ) {
   state.currentK = newK;
   syncKText();
-  loadGridFromCurrentK({recenter});
+  loadGridFromCurrentK({ recenter });
   setStatus(message);
 }
 
@@ -377,7 +379,7 @@ function commitEncodedGrid() {
   setStatus("Grid encoded into k and chart centered on the slice.");
 }
 
-function loadKFromInput({recenter = false} = {}) {
+function loadKFromInput({ recenter = false } = {}) {
   try {
     const parsed = parseBigIntStrict(kInput.value, "k");
     if (parsed < 0n) {
@@ -386,7 +388,7 @@ function loadKFromInput({recenter = false} = {}) {
     if (parsed % 17n !== 0n) {
       throw new Error("k must be divisible by 17 for a valid 17-row slice.");
     }
-    updateCurrentK(parsed, {recenter, message: "k loaded successfully."});
+    updateCurrentK(parsed, { recenter, message: "k loaded successfully." });
   } catch (error) {
     setStatus(error.message, true);
   }
@@ -502,7 +504,7 @@ function bindChartDrag() {
       event.preventDefault();
       shiftChartCenterByPixels(event.deltaY);
     },
-    {passive: false},
+    { passive: false },
   );
 }
 
@@ -552,7 +554,7 @@ function bindControls() {
   document.getElementById("invert-grid").addEventListener("click", invertGrid);
   document
     .getElementById("load-k")
-    .addEventListener("click", () => loadKFromInput({recenter: false}));
+    .addEventListener("click", () => loadKFromInput({ recenter: false }));
   document
     .getElementById("encode-grid")
     .addEventListener("click", commitEncodedGrid);
@@ -565,7 +567,7 @@ function bindControls() {
   });
 
   centerYInput.addEventListener("change", updateCenterYFromInput);
-  kInput.addEventListener("change", () => loadKFromInput({recenter: false}));
+  kInput.addEventListener("change", () => loadKFromInput({ recenter: false }));
   bindChartDrag();
   window.addEventListener("resize", resizeChart);
 }

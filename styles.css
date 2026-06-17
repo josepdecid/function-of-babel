@@ -27,7 +27,9 @@ body {
 }
 
 body {
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
   background:
     radial-gradient(circle at top, rgba(64, 103, 194, 0.22), transparent 30%),
     linear-gradient(180deg, #09101d, #050811 70%);
@@ -50,7 +52,8 @@ textarea {
 
 code,
 kbd {
-  font-family: "SFMono-Regular", SFMono-Regular, ui-monospace, Menlo, Consolas, monospace;
+  font-family:
+    "SFMono-Regular", SFMono-Regular, ui-monospace, Menlo, Consolas, monospace;
 }
 
 .page-shell {
@@ -178,7 +181,10 @@ input {
 button {
   padding: 0.7rem 1rem;
   cursor: pointer;
-  transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
+  transition:
+    transform 120ms ease,
+    border-color 120ms ease,
+    background 120ms ease;
 }
 
 button:hover,
@@ -298,7 +304,13 @@ textarea {
   border-radius: 0.25rem;
   background: rgba(5, 11, 22, 0.97);
   color: var(--text);
-  font: 0.86rem/1.35 "SFMono-Regular", SFMono-Regular, ui-monospace, Menlo, Consolas, monospace;
+  font:
+    0.86rem / 1.35 "SFMono-Regular",
+    SFMono-Regular,
+    ui-monospace,
+    Menlo,
+    Consolas,
+    monospace;
   overflow-wrap: anywhere;
   pointer-events: none;
   box-shadow: 0 0.625rem 1.875rem rgba(0, 0, 0, 0.35);
