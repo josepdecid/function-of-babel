@@ -88,6 +88,7 @@ h2 {
 }
 
 .subtitle,
+.about-panel p,
 .panel-heading p,
 .coordinate-section p,
 .hint,
@@ -101,7 +102,8 @@ h2 {
   line-height: 1.5;
 }
 
-.subtitle a {
+.subtitle a,
+.about-panel a {
   color: inherit;
   text-decoration: underline dashed rgba(163, 178, 213, 0.55);
   text-underline-offset: 0.2em;
@@ -111,7 +113,9 @@ h2 {
 }
 
 .subtitle a:hover,
-.subtitle a:focus-visible {
+.subtitle a:focus-visible,
+.about-panel a:hover,
+.about-panel a:focus-visible {
   color: var(--accent-strong);
   text-decoration-color: var(--accent);
 }
@@ -294,6 +298,34 @@ textarea {
   margin-top: var(--section-divider-space);
   padding-top: var(--section-divider-space);
   border-top: 0.0625rem solid rgba(166, 198, 255, 0.14);
+}
+
+.about-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: var(--section-divider-space);
+  padding: var(--section-divider-space) 1.75rem 0;
+  border-top: 0.0625rem solid rgba(166, 198, 255, 0.14);
+  text-align: center;
+}
+
+.about-panel h2 + p {
+  margin-top: 1.125rem;
+}
+
+.about-panel p + p {
+  margin-top: 1rem;
+}
+
+.about-panel p {
+  max-width: 52ch;
+  line-height: 1.5;
+}
+
+.about-panel math {
+  color: var(--muted);
+  font-size: 0.95em;
 }
 
 .chart-frame {
