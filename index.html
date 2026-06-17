@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Formula of Babel</title>
+  </head>
+  <body class="page-shell">
+    <section class="hero">
+      <h1>Formula of Babel</h1>
+      <p class="subtitle">
+        Paint the strip. Draw whatever. I'll find the y-coordinate where the
+        chart displays it following the formula:
+      </p>
+
+      <div class="formula-block" aria-label="Formula">
+        <math display="block">
+          <mfrac>
+            <mn>1</mn>
+            <mn>2</mn>
+          </mfrac>
+          <mo>&lt;</mo>
+          <mrow>
+            <mo>&lfloor;</mo>
+            <mrow>
+              <mi>mod</mi>
+              <mo>(</mo>
+              <mrow>
+                <mo>&lfloor;</mo>
+                <mfrac>
+                  <mi>y</mi>
+                  <mn>17</mn>
+                </mfrac>
+                <mo>&rfloor;</mo>
+                <msup>
+                  <mn>2</mn>
+                  <mrow>
+                    <mo>-</mo>
+                    <mn>17</mn>
+                    <mo>&lfloor;</mo>
+                    <mi>x</mi>
+                    <mo>&rfloor;</mo>
+                    <mo>-</mo>
+                    <mi>mod</mi>
+                    <mo>(</mo>
+                    <mrow>
+                      <mo>&lfloor;</mo>
+                      <mi>y</mi>
+                      <mo>&rfloor;</mo>
+                    </mrow>
+                    <mo>,</mo>
+                    <mn>17</mn>
+                    <mo>)</mo>
+                  </mrow>
+                </msup>
+              </mrow>
+              <mo>,</mo>
+              <mn>2</mn>
+              <mo>)</mo>
+            </mrow>
+            <mo>&rfloor;</mo>
+          </mrow>
+        </math>
+      </div>
+    </section>
+
+    <section class="workspace">
+      <div class="panel editor-panel">
+        <div class="panel-heading">
+          <div>
+            <h2>Draw</h2>
+            <p>Make a mark. Get the number.</p>
+          </div>
+          <div class="toolbar" role="group" aria-label="Editor controls">
+            <button type="button" id="clear-grid">Clear</button>
+            <button type="button" id="invert-grid">Invert</button>
+            <button type="button" id="load-k">Load k</button>
+            <button type="button" id="encode-grid" class="accent">
+              Encode grid
+            </button>
+          </div>
+        </div>
+
+        <div class="editor-wrap">
+          <canvas
+            id="editor-canvas"
+            width="954"
+            height="153"
+            aria-label="Editable Tupper grid"
+          ></canvas>
+        </div>
+        <p class="hint">Drag to draw. Hold <kbd>Shift</kbd> to erase.</p>
+      </div>
+
+      <div class="panel encode-panel">
+        <div class="panel-heading">
+          <div>
+            <h2>Number</h2>
+            <p>Paste one in, or steal the one you just made.</p>
+          </div>
+        </div>
+
+        <label class="field-label" for="k-input">y value</label>
+        <textarea
+          id="k-input"
+          rows="8"
+          spellcheck="false"
+          inputmode="numeric"
+          aria-describedby="k-help"
+        ></textarea>
+        <p id="k-help" class="hint">The page opens on the classic slice.</p>
+
+        <div class="inline-fields">
+          <label>
+            Jump the chart to y
+            <input
+              id="center-y-input"
+              type="text"
+              spellcheck="false"
+              inputmode="numeric"
+            />
+          </label>
+          <button type="button" id="center-on-k">Go to this one</button>
+        </div>
+
+        <p class="status" id="status-message" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <section class="panel chart-panel">
+      <div class="panel-heading chart-heading">
+        <div>
+          <h2>Chart</h2>
+          <p>Drag up and down. Somewhere in here, it is waiting.</p>
+        </div>
+        <div class="chart-meta">
+          <span id="visible-range">Visible y: -</span>
+        </div>
+      </div>
+
+      <div class="chart-viewport" id="chart-viewport">
+        <div class="chart-spacer" id="chart-spacer">
+          <canvas
+            id="chart-canvas"
+            width="700"
+            height="1200"
+            aria-label="Scrollable Tupper chart"
+          ></canvas>
+        </div>
+      </div>
+      <div class="chart-tooltip" id="chart-tooltip" role="tooltip" hidden></div>
+    </section>
+  </body>
+</html>

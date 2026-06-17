@@ -1,9 +1,9 @@
-import { defineConfig } from "@rsbuild/core";
+import {defineConfig} from "@rsbuild/core";
 
 export default defineConfig({
   source: {
     entry: {
-      index: "./main.js",
+      index: "./index.js",
     },
   },
   html: {
