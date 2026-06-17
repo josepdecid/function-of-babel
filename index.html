@@ -10,8 +10,8 @@
       <h1>Function of Babel</h1>
       <p class="subtitle">
         Check this function. It looks harmless enough: give it an
-        <math><mi>x</mi></math> and a <math><mi>y</mi></math>, and it decides
-        whether a tiny square should be on or off.
+        <math><mi>x</mi></math> and a <math><mi>y</mi></math
+        >, and it decides whether a tiny square should be on or off.
       </p>
 
       <div class="function-block" aria-label="Function">
@@ -72,7 +72,8 @@
           <mn>17</mn>
         </math>
         pattern you can imagine; you only need to find the
-        <math><mi>y</mi></math>-coordinate where it appears.
+        <math><mi>y</mi></math
+        >-coordinate where it appears.
       </p>
     </section>
 
@@ -80,8 +81,7 @@
       <div class="panel editor-panel">
         <div class="panel-heading">
           <div>
-            <h2>Draw</h2>
-            <p>Make a mark. Get the number.</p>
+            <h2>The art</h2>
           </div>
           <div class="toolbar" role="group" aria-label="Editor controls">
             <button type="button" id="clear-grid">Clear</button>
@@ -99,40 +99,20 @@
           ></canvas>
         </div>
         <p class="hint">Drag to draw. Hold <kbd>Shift</kbd> to erase.</p>
-      </div>
 
-      <div class="panel encode-panel">
-        <div class="panel-heading">
-          <div>
-            <h2>Number</h2>
-            <p>Paste one in, or steal the one you just made.</p>
-          </div>
+        <div class="coordinate-section">
+          <h2>
+            The <math><mi>y</mi></math> value that makes it happen
+          </h2>
+
+          <textarea
+            id="k-input"
+            rows="8"
+            spellcheck="false"
+            inputmode="numeric"
+            aria-describedby="k-help"
+          ></textarea>
         </div>
-
-        <label class="field-label" for="k-input">y value</label>
-        <textarea
-          id="k-input"
-          rows="8"
-          spellcheck="false"
-          inputmode="numeric"
-          aria-describedby="k-help"
-        ></textarea>
-        <p id="k-help" class="hint">The page opens on the classic slice.</p>
-
-        <div class="inline-fields">
-          <label>
-            Jump the chart to y
-            <input
-              id="center-y-input"
-              type="text"
-              spellcheck="false"
-              inputmode="numeric"
-            />
-          </label>
-          <button type="button" id="center-on-k">Go to this one</button>
-        </div>
-
-        <p class="status" id="status-message" aria-live="polite"></p>
       </div>
     </section>
 
@@ -146,6 +126,8 @@
           <span id="visible-range">Visible y: -</span>
         </div>
       </div>
+
+      <button type="button" id="center-on-k">Go to this one</button>
 
       <div class="chart-viewport" id="chart-viewport">
         <div class="chart-spacer" id="chart-spacer">

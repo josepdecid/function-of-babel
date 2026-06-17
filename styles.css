@@ -97,10 +97,9 @@ h2 {
 
 .subtitle,
 .panel-heading p,
+.coordinate-section p,
 .hint,
-.status,
 .field-label,
-.inline-fields label,
 .chart-meta {
   color: var(--muted);
 }
@@ -143,7 +142,6 @@ h2 {
 }
 
 .editor-panel,
-.encode-panel,
 .chart-panel {
   padding: 1.375rem;
 }
@@ -154,6 +152,25 @@ h2 {
   gap: 1.125rem;
   align-items: flex-start;
   margin-bottom: 1.125rem;
+}
+
+.editor-panel .panel-heading {
+  align-items: center;
+}
+
+.coordinate-section {
+  margin-top: 1.375rem;
+  padding-top: 1.375rem;
+  border-top: 0.0625rem solid rgba(166, 198, 255, 0.14);
+}
+
+.coordinate-section h2 + p {
+  margin-top: 0.375rem;
+  line-height: 1.5;
+}
+
+.coordinate-section .field-label {
+  margin-top: 1.125rem;
 }
 
 .panel-heading p {
@@ -242,30 +259,16 @@ textarea {
   field-sizing: content;
 }
 
-.inline-fields {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 0.75rem;
-  align-items: end;
-  margin-top: 1.125rem;
-}
-
-.inline-fields label {
-  display: grid;
-  gap: 0.5rem;
-}
-
-.status {
-  min-height: 1.5rem;
-  margin-top: 1.125rem;
-}
-
 .chart-heading {
   align-items: end;
 }
 
 .chart-panel {
   position: relative;
+}
+
+.chart-panel #center-on-k {
+  margin-bottom: 1.125rem;
 }
 
 .chart-viewport {
@@ -343,6 +346,15 @@ kbd {
   .toolbar {
     justify-content: flex-start;
   }
+
+  .editor-panel .panel-heading {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .editor-panel .toolbar {
+    justify-content: flex-end;
+  }
 }
 
 @media (max-width: 40rem) {
@@ -353,14 +365,9 @@ kbd {
 
   .hero,
   .editor-panel,
-  .encode-panel,
   .chart-panel {
     padding: 1.125rem;
     border-radius: 0.25rem;
-  }
-
-  .inline-fields {
-    grid-template-columns: 1fr;
   }
 
   button {
@@ -370,6 +377,15 @@ kbd {
   .toolbar {
     display: grid;
     grid-template-columns: 1fr 1fr;
+  }
+
+  .editor-panel .toolbar {
+    display: flex;
+    flex-wrap: nowrap;
+  }
+
+  .editor-panel .toolbar button {
+    width: auto;
   }
 
   .chart-viewport {

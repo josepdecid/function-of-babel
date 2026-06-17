@@ -30,25 +30,7 @@ const chartViewport = document.getElementById("chart-viewport");
 const chartSpacer = document.getElementById("chart-spacer");
 const chartTooltip = document.getElementById("chart-tooltip");
 const kInput = document.getElementById("k-input");
-const centerYInput = document.getElementById("center-y-input");
-const statusMessage = document.getElementById("status-message");
 const visibleRange = document.getElementById("visible-range");
-
-function setStatus(message, isError = false) {
-  statusMessage.textContent = message;
-  statusMessage.style.color = isError ? "#ffb4b4" : "#a3b2d5";
-}
-
-function parseBigIntStrict(value, label) {
-  const normalized = value.replace(/\s+/g, "").trim();
-  if (!normalized) {
-    throw new Error(`${label} is empty.`);
-  }
-  if (!/^-?\d+$/.test(normalized)) {
-    throw new Error(`${label} must be a decimal integer.`);
-  }
-  return BigInt(normalized);
-}
 
 function normalizeModulo(value, modulus) {
   const remainder = value % modulus;
@@ -324,10 +306,6 @@ function syncKText() {
   resizeKInput();
 }
 
-function syncCenterYText() {
-  centerYInput.value = state.centerY.toString();
-}
-
 function resizeKInput() {
   kInput.style.height = "auto";
   kInput.style.height = `${kInput.scrollHeight}px`;
@@ -359,44 +337,31 @@ function loadGridFromCurrentK({ recenter = false } = {}) {
   drawEditor();
   if (recenter) {
     state.centerY = state.currentK + 8n;
-    syncCenterYText();
     centerChartOnCurrentY();
   }
   scheduleChartRender();
 }
 
-function updateCurrentK(
-  newK,
-  { recenter = false, message = "Grid decoded from k." } = {},
-) {
+function updateCurrentK(newK, { recenter = false } = {}) {
   state.currentK = newK;
   syncKText();
   loadGridFromCurrentK({ recenter });
-  setStatus(message);
 }
 
-function syncCurrentKFromGrid(message) {
+function syncCurrentKFromGrid() {
   state.currentK = encodeGridToK();
   syncKText();
   scheduleChartRender();
-  if (message) {
-    setStatus(message);
-  }
 }
 
-function loadKFromText({
-  recenter = false,
-  message = "k loaded successfully.",
-}) {
+function loadKFromText({ recenter = false } = {}) {
   if (!kInput.value) {
-    setStatus("k is empty.", true);
     return;
   }
 
   const parsed = BigInt(kInput.value);
   state.currentK = parsed;
   loadGridFromCurrentK({ recenter });
-  setStatus(message);
 }
 
 function applyCellFromPoint(clientX, clientY) {
@@ -419,15 +384,14 @@ function applyCellFromPoint(clientX, clientY) {
   syncCurrentKFromGrid();
 }
 
-function updateCenterYFromInput() {
-  try {
-    state.centerY = parseBigIntStrict(centerYInput.value, "Center y");
-    centerChartOnCurrentY();
-    scheduleChartRender();
-    setStatus("Chart centered on the requested y value.");
-  } catch (error) {
-    setStatus(error.message, true);
+function centerChartOnYFromTextarea() {
+  if (!kInput.value) {
+    return;
   }
+
+  state.centerY = BigInt(kInput.value);
+  centerChartOnCurrentY();
+  scheduleChartRender();
 }
 
 function centerChartOnCurrentY() {
@@ -440,7 +404,6 @@ function shiftChartCenterByRows(rowDelta) {
     return;
   }
   state.centerY += BigInt(rowDelta);
-  syncCenterYText();
   hideChartTooltip();
   scheduleChartRender();
 }
@@ -540,7 +503,7 @@ function invertGrid() {
     }
   }
   drawEditor();
-  syncCurrentKFromGrid("Grid inverted.");
+  syncCurrentKFromGrid();
 }
 
 function clearGrid() {
@@ -548,7 +511,7 @@ function clearGrid() {
     state.grid[row].fill(false);
   }
   drawEditor();
-  syncCurrentKFromGrid("Grid cleared.");
+  syncCurrentKFromGrid();
 }
 
 function fillGrid() {
@@ -556,16 +519,13 @@ function fillGrid() {
     state.grid[row].fill(true);
   }
   drawEditor();
-  syncCurrentKFromGrid("Grid filled.");
+  syncCurrentKFromGrid();
 }
 
 function handleKInput() {
   sanitizeKInput();
   resizeKInput();
-  loadKFromText({
-    recenter: true,
-    message: "k loaded and chart centered on the slice.",
-  });
+  loadKFromText({ recenter: true });
 }
 
 function bindEditorInput() {
@@ -595,15 +555,10 @@ function bindControls() {
   document.getElementById("clear-grid").addEventListener("click", clearGrid);
   document.getElementById("fill-grid").addEventListener("click", fillGrid);
   document.getElementById("invert-grid").addEventListener("click", invertGrid);
-  document.getElementById("center-on-k").addEventListener("click", () => {
-    state.centerY = state.currentK + 8n;
-    syncCenterYText();
-    centerChartOnCurrentY();
-    scheduleChartRender();
-    setStatus("Chart centered on the current k slice.");
-  });
+  document
+    .getElementById("center-on-k")
+    .addEventListener("click", centerChartOnYFromTextarea);
 
-  centerYInput.addEventListener("change", updateCenterYFromInput);
   kInput.addEventListener("input", handleKInput);
   bindChartDrag();
   window.addEventListener("resize", resizeChart);
@@ -612,10 +567,7 @@ function bindControls() {
 function initialize() {
   bindEditorInput();
   bindControls();
-  updateCurrentK(buildReadableDefaultK(), {
-    recenter: true,
-    message: "Loaded the canonical self-referential function constant.",
-  });
+  updateCurrentK(buildReadableDefaultK(), { recenter: true });
   resizeChart();
   scheduleChartRender();
 }
