@@ -13,9 +13,13 @@
     <section class="hero">
       <h1>Function of Babel</h1>
       <p class="subtitle">
-        Check this function. It looks harmless enough: give it an
-        <math><mi>x</mi></math> and a <math><mi>y</mi></math
-        >, and it decides whether a tiny square should be on or off.
+        Check this
+        <a
+          href="https://en.wikipedia.org/wiki/Tupper%27s_self-referential_formula"
+          target="_blank"
+          rel="noopener noreferrer"
+          >formula</a
+        >. It looks harmless enough, isn't it?
       </p>
 
       <div class="function-block" aria-label="Function">
@@ -69,6 +73,11 @@
       </div>
 
       <p class="subtitle">
+        Give it an <math><mi>x</mi></math> and a <math><mi>y</mi></math
+        >, and it decides whether a tiny square should be turned on or off.
+      </p>
+
+      <p class="subtitle">
         Hidden inside it is every
         <math>
           <mn>106</mn>
@@ -82,16 +91,9 @@
     </section>
 
     <section class="workspace">
-      <div class="panel editor-panel">
+      <div class="editor-panel">
         <div class="panel-heading">
-          <div>
-            <h2>The art</h2>
-          </div>
-          <div class="toolbar" role="group" aria-label="Editor controls">
-            <button type="button" id="clear-grid">Clear</button>
-            <button type="button" id="fill-grid">Fill</button>
-            <button type="button" id="invert-grid">Invert</button>
-          </div>
+          <h2>The art</h2>
         </div>
 
         <div class="editor-wrap">
@@ -102,7 +104,15 @@
             aria-label="Editable Tupper grid"
           ></canvas>
         </div>
-        <p class="hint">Drag to draw. Hold <kbd>Shift</kbd> to erase.</p>
+
+        <div class="editor-footer">
+          <p class="hint">Drag to draw. Hold <kbd>Shift</kbd> to erase.</p>
+          <div class="toolbar" role="group" aria-label="Editor controls">
+            <button type="button" id="clear-grid">Clear</button>
+            <button type="button" id="fill-grid">Fill</button>
+            <button type="button" id="invert-grid">Invert</button>
+          </div>
+        </div>
 
         <div class="coordinate-section">
           <h2>
@@ -116,20 +126,23 @@
             inputmode="numeric"
             aria-describedby="k-help"
           ></textarea>
-
-          <div class="coordinate-actions">
-            <button type="button" id="center-on-k">Center in Chart</button>
-          </div>
         </div>
       </div>
     </section>
 
-    <section class="panel chart-panel">
+    <section class="chart-panel">
       <div class="panel-heading chart-heading">
         <div>
-          <h2>Chart</h2>
-          <p>Drag up and down. Somewhere in here, it is waiting.</p>
+          <h2>The chart that proves it&rsquo;s right</h2>
+          <p>
+            Drag up and down. Whatever you can imagine is waiting for you
+            somewhere out there...
+          </p>
         </div>
+      </div>
+
+      <div class="chart-actions">
+        <button type="button" id="center-on-k">Center Chart</button>
       </div>
 
       <div class="chart-frame">
