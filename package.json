@@ -1,0 +1,13 @@
+{
+  "name": "formula-of-babel",
+  "private": true,
+  "packageManager": "bun@1.3.9",
+  "scripts": {
+    "dev": "rsbuild dev",
+    "build": "rsbuild build",
+    "preview": "rsbuild preview"
+  },
+  "devDependencies": {
+    "@rsbuild/core": "^2.0.15"
+  }
+}
