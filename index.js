@@ -8,6 +8,9 @@ const CHART_BUFFER_ROWS = 100;
 const CHART_VISIBLE_ROWS = 32;
 const CHART_FOCAL_ROW_OFFSET = (GRID_HEIGHT - 1) / 2;
 const CHART_NATURAL_WIDTH = GRID_WIDTH * CHART_CELL_SIZE;
+const CANVAS_BG = "#07101d";
+const CELL_OFF_COLOR = "rgba(244, 247, 255, 0.08)";
+const CELL_ON_COLOR = "#f4f7ff";
 const CANONICAL_K =
   "960939379918958884971672962127852754715004339660129306651505519271702802395266424689642842174350718121267153782770623355993237280874144307891325963941337723487857735749823926629715517173716995165232890538221612403238855866184013235585136048828693337902491454229288667081096184496091705183454067827731551705405381627380967602565625016981482083418783163849115590225610003652351370343874461848378737238198224849863465033159410054974700593138339226497249461751545728366702369745461014655997933798537483143786841806593422227898388722980000748404719";
 
@@ -102,14 +105,14 @@ function drawEditor() {
   editorCanvas.width = width;
   editorCanvas.height = height;
 
-  editorContext.fillStyle = "#07101d";
+  editorContext.fillStyle = CANVAS_BG;
   editorContext.fillRect(0, 0, width, height);
 
   for (let row = 0; row < GRID_HEIGHT; row += 1) {
     for (let column = 0; column < GRID_WIDTH; column += 1) {
       editorContext.fillStyle = state.grid[row][column]
-        ? "#f4f7ff"
-        : "rgba(244, 247, 255, 0.12)";
+        ? CELL_ON_COLOR
+        : CELL_OFF_COLOR;
       editorContext.fillRect(
         column * EDITOR_CELL_SIZE,
         row * EDITOR_CELL_SIZE,
@@ -142,10 +145,10 @@ function isInKRange(y) {
 
 function getChartCellColor(enabled, y) {
   if (!enabled) {
-    return "rgba(244, 247, 255, 0.08)";
+    return CELL_OFF_COLOR;
   }
   if (isInKRange(y)) {
-    return "#f4f7ff";
+    return CELL_ON_COLOR;
   }
   return "rgba(244, 247, 255, 0.42)";
 }
@@ -178,7 +181,7 @@ function resizeChart() {
 }
 
 function fillChartBackground() {
-  chartContext.fillStyle = "#07101d";
+  chartContext.fillStyle = CANVAS_BG;
   chartContext.fillRect(0, 0, chartCanvas.width, chartCanvas.height);
 }
 
