@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://josepdecid.github.io/function-of-babel/sitemap.xml
