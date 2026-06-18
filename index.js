@@ -8,6 +8,7 @@ const CHART_BUFFER_ROWS = 100;
 const CHART_VISIBLE_ROWS = 32;
 const CHART_FOCAL_ROW_OFFSET = (GRID_HEIGHT - 1) / 2;
 const CHART_NATURAL_WIDTH = GRID_WIDTH * CHART_CELL_SIZE;
+const CHART_RENDER_ROWS = CHART_VISIBLE_ROWS + CHART_BUFFER_ROWS * 2;
 const CANVAS_BG = "#07101d";
 const CELL_OFF_COLOR = "rgba(244, 247, 255, 0.08)";
 const CELL_ON_COLOR = "#f4f7ff";
@@ -21,8 +22,11 @@ const state = {
   currentK: 0n,
   centerY: 0n,
   chartPending: false,
-  chartMetrics: null,
+  chartReady: false,
+  chartRenderTopY: null,
+  chartRenderK: null,
   chartDrag: null,
+  wheelRemainder: 0,
   painting: false,
   paintValue: true,
   visibleStartY: null,
@@ -130,7 +134,7 @@ function getChartCenterYForK(kValue) {
 }
 
 function syncChartCanvasOffset() {
-  if (!state.chartMetrics || chartCanvas.width === 0) {
+  if (!state.chartReady || chartCanvas.width === 0) {
     return;
   }
 
@@ -153,28 +157,12 @@ function getChartCellColor(enabled, y) {
   return "rgba(244, 247, 255, 0.42)";
 }
 
-function getChartDisplayMetrics() {
-  const canvasRect = chartCanvas.getBoundingClientRect();
-  const visibleRowHeight = chartViewport.clientHeight / CHART_VISIBLE_ROWS;
-
-  return {
-    rect: canvasRect,
-    rowHeight: visibleRowHeight,
-  };
+function getChartRowHeight() {
+  return chartViewport.clientHeight / CHART_VISIBLE_ROWS;
 }
 
 function resizeChart() {
-  const visibleRows = CHART_VISIBLE_ROWS;
-  const renderRows = visibleRows + CHART_BUFFER_ROWS * 2;
-
-  state.chartMetrics = {
-    width: CHART_NATURAL_WIDTH,
-    visibleRows,
-    renderRows,
-    renderTopY: null,
-    renderK: null,
-  };
-
+  state.chartReady = true;
   scheduleChartRender();
   syncChartCanvasOffset();
   updateVisibleYLabels();
@@ -183,10 +171,6 @@ function resizeChart() {
 function fillChartBackground() {
   chartContext.fillStyle = CANVAS_BG;
   chartContext.fillRect(0, 0, chartCanvas.width, chartCanvas.height);
-}
-
-function formatBigInt(value) {
-  return value.toString();
 }
 
 const MIDDLE_ELLIPSIS = "...";
@@ -244,36 +228,33 @@ function updateVisibleYLabels() {
     return;
   }
 
-  setVisibleYLabel(visibleYStartValue, formatBigInt(state.visibleStartY));
-  setVisibleYLabel(visibleYEndValue, formatBigInt(state.visibleEndY));
+  setVisibleYLabel(visibleYStartValue, state.visibleStartY.toString());
+  setVisibleYLabel(visibleYEndValue, state.visibleEndY.toString());
 }
 
 function drawChart() {
-  if (!state.chartMetrics) {
+  if (!state.chartReady) {
     return;
   }
 
-  const visibleRows = state.chartMetrics.visibleRows;
-  const renderRows = visibleRows + CHART_BUFFER_ROWS * 2;
   const topFunctionY = state.centerY - BigInt(CHART_BUFFER_ROWS);
 
   if (
-    state.chartMetrics.renderTopY === topFunctionY.toString() &&
-    state.chartMetrics.renderK === state.currentK.toString()
+    state.chartRenderTopY === topFunctionY.toString() &&
+    state.chartRenderK === state.currentK.toString()
   ) {
-    updateVisibleRange(visibleRows, topFunctionY);
+    updateVisibleRange(topFunctionY);
     return;
   }
 
-  chartCanvas.width = state.chartMetrics.width;
-  chartCanvas.height = renderRows * CHART_CELL_SIZE;
+  chartCanvas.width = CHART_NATURAL_WIDTH;
+  chartCanvas.height = CHART_RENDER_ROWS * CHART_CELL_SIZE;
   fillChartBackground();
   syncChartCanvasOffset();
-  chartCanvas.dataset.anchorY = topFunctionY.toString();
-  state.chartMetrics.renderTopY = topFunctionY.toString();
-  state.chartMetrics.renderK = state.currentK.toString();
+  state.chartRenderTopY = topFunctionY.toString();
+  state.chartRenderK = state.currentK.toString();
 
-  for (let renderedRow = 0; renderedRow < renderRows; renderedRow += 1) {
+  for (let renderedRow = 0; renderedRow < CHART_RENDER_ROWS; renderedRow += 1) {
     const y = topFunctionY + BigInt(renderedRow);
     const pixelTop = renderedRow * CHART_CELL_SIZE;
 
@@ -289,13 +270,13 @@ function drawChart() {
     }
   }
 
-  updateVisibleRange(visibleRows, topFunctionY);
+  updateVisibleRange(topFunctionY);
 }
 
-function updateVisibleRange(visibleRows, topFunctionY) {
+function updateVisibleRange(topFunctionY) {
   state.visibleStartY = topFunctionY + BigInt(CHART_BUFFER_ROWS);
   state.visibleEndY =
-    state.visibleStartY + BigInt(Math.max(visibleRows - 1, 0));
+    state.visibleStartY + BigInt(Math.max(CHART_VISIBLE_ROWS - 1, 0));
   updateVisibleYLabels();
 }
 
@@ -347,7 +328,7 @@ function loadGridFromCurrentK({ recenter = false } = {}) {
   drawEditor();
   if (recenter) {
     state.centerY = getChartCenterYForK(state.currentK);
-    centerChartOnCurrentY();
+    scheduleChartRender();
   }
   scheduleChartRender();
 }
@@ -400,14 +381,7 @@ function centerChartOnYFromTextarea() {
   }
 
   state.centerY = getChartCenterYForK(BigInt(kInput.value));
-  if (state.chartMetrics) {
-    state.chartMetrics.renderTopY = null;
-  }
-  centerChartOnCurrentY();
-  scheduleChartRender();
-}
-
-function centerChartOnCurrentY() {
+  state.chartRenderTopY = null;
   scheduleChartRender();
 }
 
@@ -424,25 +398,17 @@ function shiftChartCenterByPixels(pixelDelta) {
     return;
   }
 
-  if (!state.chartDrag) {
-    state.chartDrag = {
-      pointerId: null,
-      clientY: 0,
-      remainder: 0,
-    };
-  }
-
-  const totalDelta = state.chartDrag.remainder + pixelDelta;
-  const rowHeight = getChartDisplayMetrics().rowHeight;
+  const totalDelta = state.wheelRemainder + pixelDelta;
+  const rowHeight = getChartRowHeight();
   const rowDelta = Math.trunc(totalDelta / rowHeight);
 
   if (rowDelta !== 0) {
     shiftChartCenterByRows(rowDelta);
-    state.chartDrag.remainder = totalDelta - rowDelta * rowHeight;
+    state.wheelRemainder = totalDelta - rowDelta * rowHeight;
     return;
   }
 
-  state.chartDrag.remainder = totalDelta;
+  state.wheelRemainder = totalDelta;
 }
 
 function bindChartDrag() {
@@ -461,7 +427,7 @@ function bindChartDrag() {
       return;
     }
 
-    const { rowHeight } = getChartDisplayMetrics();
+    const rowHeight = getChartRowHeight();
     const totalDelta =
       state.chartDrag.remainder + (event.clientY - state.chartDrag.clientY);
     const rowDelta = Math.trunc(totalDelta / rowHeight);
@@ -569,7 +535,6 @@ function initialize() {
   bindControls();
   updateCurrentK(buildReadableDefaultK(), { recenter: true });
   resizeChart();
-  scheduleChartRender();
 }
 
 initialize();
